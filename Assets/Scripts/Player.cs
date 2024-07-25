@@ -28,6 +28,12 @@ public class Player : MonoBehaviour
     private int _score;
     private UIManager _uiManager;
 
+    [SerializeField]
+    private GameObject _leftEngineDmg;
+
+    [SerializeField]
+    private GameObject _rightEngineDmg;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -105,6 +111,16 @@ public class Player : MonoBehaviour
         }
 
         _lives--;
+
+        if (_lives == 2)
+        {
+            _rightEngineDmg.SetActive(true);
+        }
+        else if (_lives == 1)
+        {
+            _leftEngineDmg.SetActive(true);
+        }
+
         _uiManager.UpdateLives(_lives);
 
         if (_lives < 1)
