@@ -50,6 +50,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 4
+  _laserPrefab: {fileID: 7821111193817427259, guid: 267c93d78d9104addacd791a96587fad, type: 3}
 --- !u!50 &1358774985643548311
 Rigidbody2D:
   serializedVersion: 4
