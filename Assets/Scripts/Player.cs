@@ -14,6 +14,10 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float _fireRate = 0.5f;
     private float _canFire = -1f;
+
+    [SerializeField]
+    public int _ammoCount = 15;
+
     [SerializeField]
     private int _lives = 3;
     private SpawnManager _spawnManager;
@@ -59,6 +63,9 @@ public class Player : MonoBehaviour
     
     private AudioSource _audioSource;
 
+    [SerializeField]
+    AudioClip _noAmmoSound;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -96,6 +103,11 @@ public class Player : MonoBehaviour
 
          if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
          {
+            if (_ammoCount == 0)
+            {
+                AudioSource.PlayClipAtPoint(_noAmmoSound, transform.position);
+                return;
+            }
             FireLaser();
          }
        
@@ -124,8 +136,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    // LASER FIRE
     void FireLaser()
     {     
+        AmmoCount(-1);
         _canFire = Time.time + _fireRate;
 
         if (_isTripleShotActive == true)
@@ -264,6 +278,12 @@ public class Player : MonoBehaviour
             _isThrusterActive = false;
             _thrusterVisualizer.SetActive(false);
         }
+    }
+
+    public void AmmoCount(int bullets)
+    {
+        _ammoCount += bullets;
+        _uiManager.updateAmmoCount(_ammoCount);
     }
 
 }
