@@ -19,11 +19,31 @@ public class Player : MonoBehaviour
     private SpawnManager _spawnManager;
     [SerializeField]
     private bool _isTripleShotActive = false;
+
+    [SerializeField]
+    private bool _isSpeedBoostActive = false;
+
+    [SerializeField]
+    private bool _isThrusterActive = false;
+
+    [SerializeField]
+    private GameObject _thrusterVisualizer;
+
     [SerializeField]
     private bool _isShieldActive = false;
 
     [SerializeField]
     private GameObject _shieldVisualizer;
+
+    [SerializeField]
+    private int _shieldStrength = 3;
+
+    [SerializeField]
+    private SpriteRenderer _shieldsRenderer;
+
+    [SerializeField] 
+    private List<Color> _shieldColorArray;
+
     [SerializeField]
     private int _score;
     private UIManager _uiManager;
@@ -46,6 +66,8 @@ public class Player : MonoBehaviour
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<SpawnManager>();
         _uiManager = GameObject.Find("UI_Manager").GetComponent<UIManager>();
         _audioSource = GetComponent<AudioSource>();
+
+        _shieldsRenderer.color = _shieldColorArray[_shieldStrength -1];
         
         if (_spawnManager == null)
         {
@@ -85,8 +107,10 @@ public class Player : MonoBehaviour
         float verticalInput = Input.GetAxis("Vertical");
         
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
+
+        ActivateThruster();
        
-        transform.Translate(direction * _speed * Time.deltaTime);       
+        transform.Translate(direction * GetSpeed() * Time.deltaTime);       
 
         transform.position = new Vector3(transform.position.x, Mathf.Clamp(transform.position.y, -3.8f, 0), 0);
 
@@ -119,13 +143,46 @@ public class Player : MonoBehaviour
 
     public void Damage()
     {
-        if (_isShieldActive == true)
+
+        //SHIELDS DAMAGE
+        if (_isShieldActive == true && _shieldStrength >= 1)
         {
-            _isShieldActive = false;
-            _shieldVisualizer.SetActive(false);
+            _shieldStrength--;
+            
+
+            Debug.Log($"Shield strength: {_shieldStrength}");
+            
+
+            switch (_shieldStrength)
+            {
+                case 0:
+                    _isShieldActive = false;
+                    _shieldVisualizer.SetActive(false);
+
+                    break;
+
+                
+                case 1:
+
+                    _shieldsRenderer.color = _shieldColorArray[0];
+
+                    break;
+
+                case 2:
+                   _shieldsRenderer.color = _shieldColorArray[1];
+
+                    break;
+                case 3:
+                    _shieldsRenderer.color = _shieldColorArray[2];
+                    
+                    break;
+                
+            }
             return;
         }
+        
 
+        // LIVES DAMAGE
         _lives--;
 
         if (_lives == 2)
@@ -161,26 +218,52 @@ public class Player : MonoBehaviour
 
     public void SpeedBoostActive()
     {
+        _isSpeedBoostActive = true;
         _speed *= _speedMultiplier;
+        _thrusterVisualizer.SetActive(true);
         StartCoroutine(SpeedBoostPowerDownRoutine());
     }
     
     IEnumerator SpeedBoostPowerDownRoutine()
     {
         yield return new WaitForSeconds(5.0f);
+        _isSpeedBoostActive = false;
         _speed /= _speedMultiplier;
+        _thrusterVisualizer.SetActive(false);
+
     }
 
     public void ShieldActive()
     {
         _isShieldActive = true;
         _shieldVisualizer.SetActive(true);
+        _shieldStrength = 3;
+        _shieldsRenderer.color = _shieldColorArray[2];
     }
 
     public void AddScore(int points)
     {
         _score += points;
         _uiManager.UpdateScore(_score);
+    }
+
+    private float GetSpeed()
+    {
+        return(_speed * (_isThrusterActive ? 2.0f : 1.0f) * (_isSpeedBoostActive ? 2.0f : 1.0f));
+    }
+
+    public void ActivateThruster()
+    {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            _isThrusterActive = true;
+            _thrusterVisualizer.SetActive(true);
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            _isThrusterActive = false;
+            _thrusterVisualizer.SetActive(false);
+        }
     }
 
 }
