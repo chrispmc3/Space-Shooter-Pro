@@ -11,12 +11,13 @@ public class Player : MonoBehaviour
     private GameObject _laserPrefab;
     [SerializeField]
     private GameObject _tripleShotPrefab;
+    
     [SerializeField]
     private float _fireRate = 0.5f;
     private float _canFire = -1f;
 
     [SerializeField]
-    public int _ammoCount = 15;
+    public int _maxAmmo = 15;
 
     [SerializeField]
     private int _lives = 3;
@@ -103,7 +104,7 @@ public class Player : MonoBehaviour
 
          if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
          {
-            if (_ammoCount == 0)
+            if (_maxAmmo == 0)
             {
                 AudioSource.PlayClipAtPoint(_noAmmoSound, transform.position);
                 return;
@@ -244,8 +245,7 @@ public class Player : MonoBehaviour
         _isSpeedBoostActive = false;
         _speed /= _speedMultiplier;
         _thrusterVisualizer.SetActive(false);
-
-    }
+     }
 
     public void ShieldActive()
     {
@@ -282,8 +282,16 @@ public class Player : MonoBehaviour
 
     public void AmmoCount(int bullets)
     {
-        _ammoCount += bullets;
-        _uiManager.updateAmmoCount(_ammoCount);
+        if (bullets >= _maxAmmo)
+        {
+            _maxAmmo = 15;
+        }
+        else
+        {
+            _maxAmmo += bullets;
+        }
+
+        _uiManager.updateAmmoCount(_maxAmmo);
     }
 
 }
