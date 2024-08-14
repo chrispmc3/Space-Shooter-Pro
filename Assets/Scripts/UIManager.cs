@@ -21,6 +21,11 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     private Text _ammoText;
 
+    [SerializeField]
+    private Image _thrusterImg;
+    [SerializeField]
+    private Sprite[] _thrusterSprites;
+
 
     // Start is called before the first frame update
     void Start()
@@ -74,5 +79,10 @@ public class UIManager : MonoBehaviour
     public void updateAmmoCount(int playerAmmo)
     {
         _ammoText.text = playerAmmo.ToString();
+    }
+
+    public void UpdateThruster(int thrusterFuel)
+    {
+        _thrusterImg.sprite = _thrusterSprites[thrusterFuel];
     }
 }

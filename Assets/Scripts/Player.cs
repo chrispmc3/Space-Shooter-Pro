@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
     private GameObject _laserPrefab;
     [SerializeField]
     private GameObject _tripleShotPrefab;
+    [SerializeField]
+    private GameObject _lifePrefab;
     
     [SerializeField]
     private float _fireRate = 0.5f;
@@ -33,6 +35,9 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private GameObject _thrusterVisualizer;
+
+    [SerializeField]
+    private float _thrusterPower = 4f;
 
     [SerializeField]
     private bool _isShieldActive = false;
@@ -67,6 +72,19 @@ public class Player : MonoBehaviour
     [SerializeField]
     AudioClip _noAmmoSound;
 
+    [SerializeField]
+    float _shakeDuration = 0.3f;
+
+    [SerializeField]
+    float _shakeMagnitude = 0.4f;
+
+    CameraShake _cameraShake;
+
+    private bool _shiftDown;
+
+    [SerializeField]
+    LayerMask AOE;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -74,8 +92,8 @@ public class Player : MonoBehaviour
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<SpawnManager>();
         _uiManager = GameObject.Find("UI_Manager").GetComponent<UIManager>();
         _audioSource = GetComponent<AudioSource>();
-
         _shieldsRenderer.color = _shieldColorArray[_shieldStrength -1];
+        _cameraShake = GameObject.Find("CameraShake").GetComponent<CameraShake>();
         
         if (_spawnManager == null)
         {
@@ -94,6 +112,11 @@ public class Player : MonoBehaviour
         else
         {
             _audioSource.clip = _laserSoundClip;
+        }
+
+        if (_cameraShake == null)
+        {
+            Debug.LogError("The Camera Shake is NULL.");
         }
     }
 
@@ -121,7 +144,7 @@ public class Player : MonoBehaviour
         
         Vector3 direction = new Vector3(horizontalInput, verticalInput, 0);
 
-        ActivateThruster();
+        
        
         transform.Translate(direction * GetSpeed() * Time.deltaTime);       
 
@@ -135,6 +158,8 @@ public class Player : MonoBehaviour
         {
             transform.position = new Vector3(13.5f, transform.position.y, 0);
         }
+
+        ActivateThruster();
     }
 
     // LASER FIRE
@@ -195,10 +220,13 @@ public class Player : MonoBehaviour
             }
             return;
         }
+
         
 
         // LIVES DAMAGE
+        
         _lives--;
+        StartCoroutine(_cameraShake.Shake(_shakeDuration, _shakeMagnitude));
 
         if (_lives == 2)
         {
@@ -268,16 +296,54 @@ public class Player : MonoBehaviour
 
     public void ActivateThruster()
     {
-        if (Input.GetKey(KeyCode.LeftShift))
+        
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {   
+            _shiftDown = true;
+
+        }    
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            _shiftDown = false;
+        }
+
+        if (_shiftDown == true)
         {
             _isThrusterActive = true;
             _thrusterVisualizer.SetActive(true);
+            ThrusterActive();
         }
-        else if (Input.GetKeyUp(KeyCode.LeftShift))
+        else
+        {
+            _isThrusterActive = false;
+            AddFuel();
+            _thrusterVisualizer.SetActive(false);
+            
+        }
+    }
+
+    public void ThrusterActive()
+    {
+        if (_thrusterPower > 0)
+        {
+            _thrusterPower -= 1.0f * Time.deltaTime;
+        }
+        else if (_thrusterPower <= 0)
         {
             _isThrusterActive = false;
             _thrusterVisualizer.SetActive(false);
         }
+
+        _uiManager.UpdateThruster((int)Mathf.Round(_thrusterPower));
+    }
+
+    public void AddFuel()
+    {
+        if (_thrusterPower < 4 && _isThrusterActive == false)
+        {
+            _thrusterPower += 0.1f * Time.deltaTime;
+        }
+        _uiManager.UpdateThruster((int)Mathf.Round(_thrusterPower));
     }
 
     public void AmmoCount(int bullets)
@@ -292,6 +358,29 @@ public class Player : MonoBehaviour
         }
 
         _uiManager.updateAmmoCount(_maxAmmo);
+    }
+
+    public void AddLife()
+    {
+        if (_lives < 3)
+        {
+            _lives++;
+            _uiManager.UpdateLives(_lives);
+
+            if (_lives == 1)
+            {
+                _rightEngineDmg.SetActive(false);
+            }
+            else if (_lives == 2)
+            {
+                _leftEngineDmg.SetActive(false);
+            }
+            else if (_lives == 3)
+            {
+                _rightEngineDmg.SetActive(false);
+                _leftEngineDmg.SetActive(false);
+            }
+        }
     }
 
 }
