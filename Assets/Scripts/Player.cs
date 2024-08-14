@@ -83,7 +83,13 @@ public class Player : MonoBehaviour
     private bool _shiftDown;
 
     [SerializeField]
-    LayerMask AOE;
+    private bool _isShockWaveEnabled = false;
+
+    [SerializeField]
+    private GameObject _shockWaveVisualizer;
+
+    [SerializeField]
+    LayerMask AoE;
 
     // Start is called before the first frame update
     void Start()
@@ -125,15 +131,23 @@ public class Player : MonoBehaviour
     {
        CalculateMovement();
 
-         if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
-         {
+        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
+        {
             if (_maxAmmo == 0)
             {
                 AudioSource.PlayClipAtPoint(_noAmmoSound, transform.position);
                 return;
             }
             FireLaser();
-         }
+
+        }
+
+        // if (Input.GetKeyDown(KeyCode.K))
+        // {
+        //     AreaOfEffectDamage();
+        //     Debug.Log("You Pressed K.");
+        // }
+
        
     }
 
@@ -170,14 +184,18 @@ public class Player : MonoBehaviour
 
         if (_isTripleShotActive == true)
         {
-            Instantiate(_tripleShotPrefab, transform.position, Quaternion.identity);        
+            Instantiate(_tripleShotPrefab, transform.position, Quaternion.identity);  
+            _audioSource.Play();      
+        }
+        else if (_isShockWaveEnabled == true)
+        {
+            StartCoroutine(ShockWaveRoutine());
         }
         else
         {
             Instantiate(_laserPrefab, transform.position + new Vector3(0, 1.05f, 0), Quaternion.identity);
+            _audioSource.Play();
         }
-
-        _audioSource.Play();
         
     }
 
@@ -258,6 +276,8 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(5.0f);
         _isTripleShotActive = false;
     }
+
+
 
     public void SpeedBoostActive()
     {
@@ -382,5 +402,37 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    private void AreaOfEffectDamage()
+    {
+        Vector2 origin = new Vector2(0f, 0f);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(origin, 5f, AoE);
+
+        foreach(Collider2D c in colliders)
+        {
+            if (c.GetComponent<Enemy>())
+            {
+                Debug.Log("Found Colliders");
+                c.GetComponent<Enemy>().EnemyDamage();
+            }
+        }
+    }
+
+    public void ShockWaveEnabled()
+    {
+        _isShockWaveEnabled = true;
+    }
+
+    IEnumerator ShockWaveRoutine()
+    {
+        _shockWaveVisualizer.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+        AreaOfEffectDamage();
+        yield return new WaitForSeconds(1.0f);
+        _shockWaveVisualizer.SetActive(false);
+        _isShockWaveEnabled = false;
+    }
+
+    
 
 }

@@ -51,6 +51,9 @@ public class Powerup : MonoBehaviour
                     case 4:
                         player.AddLife();
                         break;
+                    case 5:
+                        player.ShockWaveEnabled();
+                        break;
                     default:
                         Debug.Log("Default Value");
                         break;
